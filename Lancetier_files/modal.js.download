@@ -1,0 +1,146 @@
+// Use a parent container that already exists in the DOM
+$('#nav-tabContent').on('click', '.department-item__btn_next', async function () {
+
+  const departments = await $.getJSON(themeUrl + '/js/departments.json')
+  const dataId = $(this).attr('data-id')
+  const contentIndex = $(this).attr('data-content-index')
+  const department = departments[dataId]
+  const departmentContent = departments[dataId].content[contentIndex]
+  $('#modal-department-img').attr('src', themeUrl+ department?.img)
+  $('#modal-department-name').text(department?.name)
+  $('#modal-department-body-bold').text(departmentContent?.combined_text['bold'])
+  $('#modal-department-body-text').text(departmentContent?.combined_text?.text)
+  $('#modal-department-footer').text(departmentContent?.note)
+  $('#modelDepartment').modal('show');
+});
+
+$('#nav-tabContent-mb').on('click', '.department-item__btn_next', async function () {
+
+  const departments = await $.getJSON(themeUrl + '/js/departments.json')
+  const dataId = $(this).attr('data-id')
+  const contentIndex = $(this).attr('data-content-index')
+  const department = departments[dataId]
+  const departmentContent = departments[dataId].content[contentIndex]
+  $('#modal-department-img').attr('src', themeUrl+ department?.img)
+  $('#modal-department-name').text(department?.name)
+  $('#modal-title-sub').text(departmentContent?.title)
+  $('#modal-department-body-bold').text(departmentContent?.combined_text?.bold)
+  $('#modal-department-body-text').text(department?.combined_text?.text)
+  $('#modal-department-footer').text(departmentContent?.note)
+  $('#modelDepartment').modal('show');
+})
+
+$('#nav-tabContent-mb').on('click','.department-content--item__btn', function () {
+  let ariaControls = $(this).children().attr('aria-controls');
+  $(`#${ariaControls}`).collapse('toggle');
+
+})
+
+function renderDepartmentMobile(data) {
+  let departmentContentItems = '';
+
+  data.forEach(function (item, index) {
+    let departmentContentItem = document.createElement('div');
+    departmentContentItem.classList.add("department-content--item");
+    let title = ` <p class="department-content--item__btn">
+          <a data-bs-toggle="collapse" href="${'collapseDepartment' + index}" role="button" aria-expanded="false"
+             aria-controls="${'collapseDepartment' + index}">
+            <span class="text-btn">
+            ${item.name}
+            </span>
+            <img src="${themeUrl}/images/plus.svg" alt="plus">
+          </a>
+        </p>`
+    let departmentContentList = document.createElement('div');
+    departmentContentList.classList.add("department-content--item__list", "collapse");
+    departmentContentList.setAttribute("id", "collapseDepartment" + index);
+
+    let departmentItems = '';
+    item.content.forEach(function (content, cidx) {
+      departmentItems += `<div class="department-item">
+            <div class="department-item__header">
+                 ${content.title}
+            </div>
+      
+            <div class="department-item__btn_next" data-id="${index}" data-content-index="${cidx}">
+                <img src="${themeUrl}/images/bnt_next.svg" alt="next">
+            </div>
+          </div>`;
+    });
+
+    // Create a temporary container element
+    let tempContainer = document.createElement('div');
+    tempContainer.innerHTML = departmentItems;
+
+    // Append the container's children to tabDepartmentContent
+    for (let i = 0; i < tempContainer.children.length; i++) {
+      departmentContentList.appendChild(tempContainer.children[i].cloneNode(true));
+    }
+    departmentContentItem.innerHTML = title + departmentContentList.outerHTML;
+    departmentContentItems += departmentContentItem.outerHTML;
+
+  })
+  $('#nav-tabContent-mb').append(departmentContentItems);
+}
+function renderDepartmentPC(data) {
+  let navLink = '';
+  let navContents = '';
+
+  data.forEach(function (item, index) {
+    navLink += `<a class="nav-link ${index === 0 && 'active'}" id="nav-tab-${index + 1}" data-bs-toggle="tab" data-bs-target="#nav-${index + 1}" type="button"
+             role="tab" aria-controls="nav-${index + 1}" aria-selected="true">
+            <div class="tab-link">
+              <div class="user-image">
+                <img src="${themeUrl + item.img}" alt="${item.id}">
+              </div>
+              <div class="user-name">${item.name}</div>
+              <div class="tab-line"></div>
+            </div>
+          </a>`
+
+    let divTabPane = document.createElement('div');
+    divTabPane.classList.add("tab-pane", "fade")
+    divTabPane.setAttribute("id", `nav-${index + 1}`)
+    divTabPane.setAttribute("role", "tabpanel")
+    divTabPane.setAttribute("aria-labelledby", `nav-tab-${index + 1}`)
+    if (index === 0) {
+      divTabPane.classList.add("show", "active")
+    }
+    let tabDepartmentContent = document.createElement('div');
+    tabDepartmentContent.classList.add("tab-department-content");
+
+    let departmentItems = '';
+
+    item.content.forEach(function (content, cidx) {
+      departmentItems += `<div class="department-item">
+        <div class="department-item__header">
+            ${content.title}
+        </div>
+        <div class="department-item__btn_next" data-id="${index}" data-content-index="${cidx}">
+            <img src="${themeUrl}/images/bnt_next.svg" alt="next">
+        </div>
+    </div>`;
+    });
+
+    // Create a temporary container element
+    let tempContainer = document.createElement('div');
+    tempContainer.innerHTML = departmentItems;
+
+    // Append the container's children to tabDepartmentContent
+    for (let i = 0; i < tempContainer.children.length; i++) {
+      tabDepartmentContent.appendChild(tempContainer.children[i].cloneNode(true));
+    }
+
+    divTabPane.appendChild(tabDepartmentContent);
+    navContents += divTabPane.outerHTML
+  });
+
+  $('#nav-department').append(navLink);
+  $('#nav-tabContent').append(navContents);
+}
+
+
+$.getJSON(themeUrl + '/js/departments.json', function (data) {
+  renderDepartmentPC(data)
+  renderDepartmentMobile(data)
+});
